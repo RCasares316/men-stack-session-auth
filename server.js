@@ -1,6 +1,7 @@
 const express = require("express");
 const logger = require("morgan");
 const methodOverride = require("method-override");
+const session = require('express-session');
 const path = require("path");
 const db = require("./db/connection.js");
 const routes = require("./routes/index.js")
@@ -15,6 +16,13 @@ app.use(express.urlencoded({ extended: false })); // Parse through Form Data and
 app.use(methodOverride("_method")); // Tricks Form POST request so we can use PUT / DELETE
 app.use(logger("dev"));
 app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+  })
+)
 
 // Routes
 app.use("/", routes)
