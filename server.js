@@ -1,11 +1,14 @@
 const express = require("express");
 const logger = require("morgan");
 const methodOverride = require("method-override");
-const session = require('express-session');
+const session = require("express-session");
+const passUserToView = require("./middleware/pass-user-to-view.js");
 const path = require("path");
 const db = require("./db/connection.js");
-const routes = require("./routes/index.js")
+const routes = require("./routes/index.js");
 const dotenv = require("dotenv");
+const MongoStore = require("connect-mongo").default;
+
 dotenv.config();
 
 const app = express();
@@ -21,11 +24,14 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+    }),
   })
-)
-
+);
+app.use(passUserToView)
 // Routes
-app.use("/", routes)
+app.use("/", routes);
 
 // Initialize Server
 db.on("connected", () => {
@@ -36,4 +42,3 @@ db.on("connected", () => {
     console.log("Your server is running!");
   });
 });
-

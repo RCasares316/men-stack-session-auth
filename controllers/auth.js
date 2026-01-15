@@ -9,7 +9,7 @@ const registerUser = async (req, res) => {
   //ensure username isnt taken
   const userInDatabase = await User.findOne({ username: req.body.username });
   if (userInDatabase) {
-    retures.send("Username already taken.");
+    return res.send("Username already taken.");
   }
   //ensure password and confirm password match
   if (req.body.password !== req.body.confirmPassword) {
@@ -19,7 +19,19 @@ const registerUser = async (req, res) => {
   const hashedPassword = bcrypt.hashSync(req.body.password, 10);
 
   //creat user
-  await User.create({ username: req.body.username, password: hashedPassword });
+  const user = await User.create({
+    username: req.body.username,
+    password: hashedPassword,
+  });
+
+  req.session.user = {
+    username: user.username,
+    _id: user._id,
+  };
+
+  req.session.save(() => {
+    res.redirect("/");
+  });
 
   //redirect
   res.redirect("/");
@@ -48,12 +60,15 @@ const loginUser = async (req, res) => {
     username: userInDatabase.username,
     _id: userInDatabase._id,
   };
-  res.redirect("/");
+  req.session.save(() => {
+    res.redirect("/");
+  });
 };
 
 const signOut = (req, res) => {
-  req.session.destroy();
-  res.redirect("/");
+  req.session.destroy(() => {
+    res.redirect("/");
+  });
 };
 
 module.exports = {
